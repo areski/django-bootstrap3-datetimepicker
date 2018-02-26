@@ -148,33 +148,27 @@ class DateTimePicker(DateTimeInput):
         if value is None:
             value = ''
 
-        try:
-            # For django version < 1.11
-            input_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
-        except TypeError:
-            # For django version >= 1.11
-            extra_attrs = {"type": self.input_type, "name": name}
-            if self.attrs:
-                extra_attrs.update(self.attrs)
-            input_attrs = self.build_attrs(attrs, extra_attrs=extra_attrs)
+        extra_attrs = dict(type=self.input_type, name=name)
+        if self.attrs:
+            extra_attrs.update(self.attrs)
+
+        input_attrs = self.build_attrs(attrs, extra_attrs=extra_attrs)
 
         if value != '':
             # Only add the 'value' attribute if a value is non-empty.
-            input_attrs['value'] = force_text(self.format_value(value))
-        input_attrs = dict([(key, conditional_escape(val)) for key, val in input_attrs.items()])  # python2.6 compatible
+            input_attrs['value'] = force_text(self._format_value(value))
+        input_attrs = {key: conditional_escape(val) for key, val in input_attrs.items()}
         if not self.picker_id:
             self.picker_id = (input_attrs.get('id', '') + '_pickers').replace(' ', '_')
         self.div_attrs['id'] = self.picker_id
         picker_id = conditional_escape(self.picker_id)
-        div_attrs = dict(
-            [(key, conditional_escape(val)) for key, val in self.div_attrs.items()])  # python2.6 compatible
-        icon_attrs = dict([(key, conditional_escape(val)) for key, val in self.icon_attrs.items()])
+        div_attrs = {key: conditional_escape(val) for key, val in self.div_attrs.items()}
+        icon_attrs = {key: conditional_escape(val) for key, val in self.icon_attrs.items()}
         html = self.html_template % dict(div_attrs=flatatt(div_attrs),
                                          input_attrs=flatatt(input_attrs),
                                          icon_attrs=flatatt(icon_attrs))
         if self.options:
-            js = self.js_template % dict(picker_id=picker_id,
-                                         options=json.dumps(self.options or {}))
+            js = self.js_template % dict(picker_id=picker_id, options=json.dumps(self.options or {}))
         else:
             js = ''
         return mark_safe(force_text(html + js))
@@ -276,24 +270,28 @@ class TimePicker(TimeInput):
     def render(self, name, value, attrs=None):
         if value is None:
             value = ''
-        input_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
+
+        extra_attrs = dict(type=self.input_type, name=name)
+        if self.attrs:
+            extra_attrs.update(self.attrs)
+
+        input_attrs = self.build_attrs(attrs, extra_attrs=extra_attrs)
+
         if value != '':
             # Only add the 'value' attribute if a value is non-empty.
             input_attrs['value'] = force_text(self._format_value(value))
-        input_attrs = dict([(key, conditional_escape(val)) for key, val in input_attrs.items()])  # python2.6 compatible
+        input_attrs = {key: conditional_escape(val) for key, val in input_attrs.items()}
         if not self.picker_id:
-            self.picker_id = input_attrs.get('id', '') + '_picker'
+            self.picker_id = (input_attrs.get('id', '') + '_pickers').replace(' ', '_')
         self.div_attrs['id'] = self.picker_id
         picker_id = conditional_escape(self.picker_id)
-        div_attrs = dict(
-            [(key, conditional_escape(val)) for key, val in self.div_attrs.items()])  # python2.6 compatible
-        icon_attrs = dict([(key, conditional_escape(val)) for key, val in self.icon_attrs.items()])
+        div_attrs = {key: conditional_escape(val) for key, val in self.div_attrs.items()}
+        icon_attrs = {key: conditional_escape(val) for key, val in self.icon_attrs.items()}
         html = self.html_template % dict(div_attrs=flatatt(div_attrs),
                                          input_attrs=flatatt(input_attrs),
                                          icon_attrs=flatatt(icon_attrs))
-        if not self.options:
-            js = ''
+        if self.options:
+            js = self.js_template % dict(picker_id=picker_id, options=json.dumps(self.options or {}))
         else:
-            js = self.js_template % dict(picker_id=picker_id,
-                                         options=json.dumps(self.options or {}))
+            js = ''
         return mark_safe(force_text(html + js))
